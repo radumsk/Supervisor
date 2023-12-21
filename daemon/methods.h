@@ -1,0 +1,6 @@
+#ifndef SUPERVISORLIBRARY_METHODS_H
+#define SUPERVISORLIBRARY_METHODS_H
+
+void print_bebino(int socket);
+
+#endif //SUPERVISORLIBRARY_METHODS_H
