@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include <sys/socket.h>
+#include <stdlib.h>
 
 #include "daemon_flags.h"
 #include "listener.h"

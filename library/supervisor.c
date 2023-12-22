@@ -4,10 +4,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
-#include <libc.h>
 #include <sys/un.h>
 #include <stdbool.h>
-
+#include <sys/socket.h>
 
 supervisor_t supervisor_init(){
     supervisor_t supervisor = socket(AF_UNIX, SOCK_STREAM, 0);
