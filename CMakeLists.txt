@@ -13,7 +13,9 @@ add_executable(SupervisorDaemon
         daemon/methods.c
         daemon/methods.h)
 
-add_library(SupervisorLibrary SHARED library/supervisor.c library/supervisor.h)
+add_library(SupervisorLibrary SHARED library/supervisor.c library/supervisor.h
+        library/service.h
+        library/service.c)
 
 target_link_libraries(SupervisorLibrary pthread)
 
