@@ -1,10 +1,10 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
-#include <libc.h>
 #include <sys/un.h>
 #include <stdbool.h>
 #include <pthread.h>
+#include <sys/socket.h>
 
 #include "daemon_flags.h"
 #include "listener.h"

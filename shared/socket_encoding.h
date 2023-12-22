@@ -8,6 +8,7 @@
 
 #include <string.h>
 #include <stdbool.h>
+#include <sys/types.h>
 
 char* encode_message(char* message, ssize_t message_size);
 bool is_message_complete(char* buffer, ssize_t buffer_size);
