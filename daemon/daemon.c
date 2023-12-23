@@ -6,6 +6,7 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #include "daemon_flags.h"
 #include "listener.h"
@@ -14,6 +15,7 @@
 pthread_mutex_t mutex;
 
 int create_socket(int* server_socket, bool force){
+    umask(0);
     // Check if socket already exists
     if(access(SOCKET_PATH, F_OK) != -1){
         // Socket already exists
@@ -26,6 +28,17 @@ int create_socket(int* server_socket, bool force){
         } else {
             printf("Socket already exists\n");
             return -1;
+        }
+    } else {
+        // Socket does not exist
+        // Check if the directory exists
+        if(access(SOCKET_DIRECTORY, F_OK) == -1){
+            // Directory does not exist
+            // Create the directory
+            if(mkdir(SOCKET_DIRECTORY, S_IRWXU | S_IRWXG | S_IRWXO)){
+                perror("mkdir");
+                return errno;
+            }
         }
     }
 

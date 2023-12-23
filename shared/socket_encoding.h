@@ -2,7 +2,9 @@
 #define SUPERVISORDAEMON_SOCKET_ENCODING_H
 
 #define LENGTH_SIZE 4
-#define SOCKET_PATH "/var/run/supervisor/supervisor.sock"
+#define SOCKET_DIRECTORY "/var/run/supervisor"
+#define SOCKET_NAME "supervisor.sock"
+#define SOCKET_PATH SOCKET_DIRECTORY "/" SOCKET_NAME
 #define BUFFER_SIZE 1024
 
 
