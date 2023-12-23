@@ -17,5 +17,7 @@ bool is_message_complete(char* buffer, ssize_t buffer_size);
 char* decode_message(char* buffer, ssize_t buffer_size);
 int send_message(int socket, char* message, ssize_t message_size);
 int receive_message(int socket, char** message, ssize_t* message_size);
+int send_command(int socket, char* command, ssize_t command_size, void* params, ssize_t params_size);
+int receive_command(int socket, char** command, ssize_t* command_size, void** params, ssize_t* params_size);
 
 #endif //SUPERVISORDAEMON_SOCKET_ENCODING_H

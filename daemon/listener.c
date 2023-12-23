@@ -19,26 +19,29 @@ void* listen_on_socket(void* params){
 
 //    free(params);
     while (!stop){
-        char* message;
-        ssize_t message_size;
-        if(receive_message(client_socket, &message, &message_size)){
+        char* command;
+        ssize_t command_size;
+        void* command_params;
+        ssize_t params_size;
+        if(receive_command(client_socket, &command, &command_size, &command_params, &params_size)){
             perror("receive_message");
             return_value->error = errno;
             return return_value;
         }
 
         // DEBUG: Print the message
-        printf("%s\n", message);
+        printf("Received message: %s\n", command);
 
         // Check if the message is "stop"
-        if(!strcmp(message, "stop")){
+        if(!strcmp(command, "stop")){
             if(send_message(client_socket, "ok", 2)){
                 return_value->error = errno;
                 return return_value;
             }
             stop = true;
-        } else if(!strcmp(message, "bebino")){
-            print_bebino(client_socket);
+        } else if(!strcmp(command, "bebino")){
+            print_bebino(client_socket, command_params);
+            free(command_params);
         }
     }
     // Close the socket

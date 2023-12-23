@@ -7,6 +7,7 @@
 #include <sys/un.h>
 #include <stdbool.h>
 #include <sys/socket.h>
+#include <stdlib.h>
 
 supervisor_t supervisor_init(){
     supervisor_t supervisor = socket(AF_UNIX, SOCK_STREAM, 0);
@@ -33,7 +34,7 @@ supervisor_t supervisor_init(){
 }
 
 int supervisor_close(supervisor_t supervisor){
-    if(send_message(supervisor, "stop", 4)){
+    if(send_command(supervisor, "stop", 4, NULL, 0)){
         perror("send_message");
         return errno;
     }
@@ -54,16 +55,34 @@ int supervisor_close(supervisor_t supervisor){
     return 0;
 }
 
+struct bebino_t{
+    int x;
+    char y;
+};
+
 void bebino(supervisor_t supervisor){
-    if(send_message(supervisor, "bebino", 6)){
-        perror("send_message");
+    struct bebino_t bebino;
+    bebino.x = 5;
+    bebino.y = 'a';
+    if(send_command(supervisor, "bebino", 6, &bebino, sizeof(struct bebino_t))){
+        perror("send_command");
         return;
     }
-    char* message;
-    ssize_t message_size;
-    if(receive_message(supervisor, &message, &message_size)){
-        perror("receive_message");
+    char* command;
+    ssize_t command_size;
+    void* params;
+    ssize_t params_size;
+    if(receive_command(supervisor, &command, &command_size, &params, &params_size)){
+        perror("receive_command");
         return;
     }
-    printf("%s\n", message);
+    if(strcmp(command, "ok") != 0){
+        printf("Received unexpected command: %s\n", command);
+        return;
+    }
+    struct bebino_t* bebino_response = (struct bebino_t*) params;
+    printf("Received bebino response: %d, %c\n", bebino_response->x, bebino_response->y);
+
+    free(command);
+    free(params);
 }
