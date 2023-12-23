@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "methods.h"
 #include "../library/supervisor.h"
 #include "../shared/socket_encoding.h"

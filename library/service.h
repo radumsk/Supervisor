@@ -10,15 +10,20 @@
 #define SUPERVISOR_STATUS_RUNNING 0x1
 #define SUPERVISOR_STATUS_PENDING 0x2
 #define SUPERVISOR_STATUS_STOPPED 0x4
+#define MAX_SERVICES 100
 
 
 #include "supervisor.h"
 
 typedef struct {
     supervisor_t supervisor;
-    char *servicename;
-    //poate mai trebuie si alte informatii, momentan e suficient dpmdv
+    char * servicename;
+    int pid;
+    char ** args;
+    int status;
+    int flags;
 } service_t;
+
 
 //cerinta 2
 service_t service_create(
