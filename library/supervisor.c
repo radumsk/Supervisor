@@ -9,6 +9,10 @@
 #include <sys/socket.h>
 #include <stdlib.h>
 
+
+service_info_t services[MAX_SERVICES];
+
+
 supervisor_t supervisor_init(){
     supervisor_t supervisor = socket(AF_UNIX, SOCK_STREAM, 0);
 
@@ -85,4 +89,48 @@ void bebino(supervisor_t supervisor){
 
     free(command);
     free(params);
+}
+
+
+int start_service(const char *servicename) {
+    printf("Starting service: %s\n", servicename);
+
+    sleep(2);
+
+    printf("Service %s started successfully.\n", servicename);
+
+    return 0;
+}
+
+void handle_open_command(supervisor_t supervisor, const char *servicename) {
+    int status = start_service(servicename);
+
+    for (int i = 0; i < MAX_SERVICES; ++i) {
+        if (services[i].servicename != NULL && strcmp(services[i].servicename, servicename) == 0) {
+            services[i].status = status;
+            break;
+        } else if (services[i].servicename == NULL) {
+            services[i].servicename = strdup(servicename);
+            services[i].status = status;
+            break;
+        }
+    }
+
+    if (send_command(supervisor, "ok", 2, &status, sizeof(int))) {
+        perror("send_command");
+    }
+}
+
+void handle_status_command(supervisor_t supervisor, const char *servicename) {
+    int status = -1;
+    for (int i = 0; i < MAX_SERVICES; ++i) {
+        if (services[i].servicename != NULL && strcmp(services[i].servicename, servicename) == 0) {
+            status = services[i].status;
+            break;
+        }
+    }
+
+    if (send_command(supervisor, "ok", 2, &status, sizeof(int))) {
+        perror("send_command");
+    }
 }

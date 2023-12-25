@@ -2,6 +2,15 @@
 #define SUPERVISORLIBRARY_SUPERVISOR_H
 
 #include <stdbool.h>
+#include "service.h"
+
+
+
+typedef struct {
+    const char *servicename;
+    int status;
+} service_info_t;
+
 
 typedef int supervisor_t;
 
