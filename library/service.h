@@ -6,6 +6,7 @@
 #define SUPERVISORLIBRARY_SERVICE_H
 
 #include "supervisor.h"
+#include <sys/wait.h>
 
 typedef int supervisor_t;
 
@@ -15,13 +16,13 @@ typedef int supervisor_t;
 #define SUPERVISOR_STATUS_PENDING 0x2
 #define SUPERVISOR_STATUS_STOPPED 0x4
 #define MAX_SERVICES 100
-
-
+#define MAX_RESTART_TIMES 3
 
 
 typedef struct {
     supervisor_t supervisor;
     char * servicename;
+    int service_id;
     int pid;
     char ** args;
     int status;
@@ -55,5 +56,9 @@ int service_resume(service_t service);
 //cerinta 5
 int service_cancel(service_t service);
 int service_remove(service_t service);
+
+//cerinta 6
+
+service_t service_restart(supervisor_t supervisor, const char *servicename, const char *program_path, const char **argv, int argc, int flags);
 
 #endif //SUPERVISORLIBRARY_SERVICE_H
