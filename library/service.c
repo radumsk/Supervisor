@@ -135,7 +135,7 @@ int service_suspend(service_t service){
         printf("Received unexpected params size for service status\n");
     }
 
-    kill(service.pid, SIGSTOP);
+ //   kill(service.pid, SIGSTOP); mutat in listerer.c
     free(command);
     free(params);
 
@@ -169,8 +169,8 @@ int service_resume(service_t service){
     } else {
         printf("Received unexpected params size for service status\n");
     }
-
-    kill(service.pid, SIGCONT);
+    // logica mutata in listener.c
+    //   kill(service.pid, SIGCONT);
     free(command);
     free(params);
 
@@ -206,12 +206,12 @@ int service_cancel(service_t service){
     } else {
         printf("Received unexpected params size for service status\n");
     }
-
-    int result = kill(service.pid, SIGKILL);
-
-    if (result == -1) {
-        perror("kill");
-    }
+// logica mutata in listener.c
+//    int result = kill(service.pid, SIGKILL);
+//
+//    if (result == -1) {
+//        perror("kill");
+//    }
 
     free(command);
     free(params);

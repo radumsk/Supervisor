@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
+#include <signal.h>
 #include "daemon_flags.h"
 #include "../shared/socket_encoding.h"
 #include "listener.h"
@@ -42,6 +43,61 @@ void* listen_on_socket(void* params){
         } else if(!strcmp(command, "bebino")){
             print_bebino(client_socket, command_params);
             free(command_params);
+        }
+        /*
+        else if (!strcmp(command, "suspend")){
+
+            if(send_message(client_socket, "ok", 2)){
+                return_value->error = errno;
+                return return_value;
+            }
+
+            kill(getpid(), SIGSTOP);
+        }
+
+        else if (!strcmp(command, "resume")){
+
+            if(send_message(client_socket, "ok", 2)){
+                return_value->error = errno;
+                return return_value;
+            }
+
+            kill(getpid(), SIGCONT);
+        }
+
+        else if(!strcmp(command, "cancel")) {
+
+            if(send_message(client_socket, "ok", 2)){
+                return_value->error = errno;
+                return return_value;
+            }
+
+            int result = kill(getpid(), SIGKILL);
+            if (result) {
+                perror("kill");
+                return_value->error = errno;
+                return return_value;
+            }
+        }
+        else if(!strcmp(command, "remove")){
+            // inchide handlerul obtinut cu service_open() si elibereaza resursele asociate
+
+            if(send_message(client_socket, "ok", 2)){
+                return_value->error = errno;
+                return return_value;
+            }
+            free(command_params);
+            free(command);
+            stop = true;
+
+        }
+         */
+        else {
+            printf("Received unexpected command: %s\n", command);
+            if(send_message(client_socket, "error", 5)){
+                return_value->error = errno;
+                return return_value;
+            }
         }
     }
     // Close the socket
