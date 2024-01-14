@@ -8,6 +8,7 @@
 #include "supervisor.h"
 #include <sys/wait.h>
 
+
 typedef int supervisor_t;
 
 #define SUPERVISOR_FLAGS_CREATESTOPPED 0x1
@@ -22,14 +23,21 @@ typedef int supervisor_t;
 typedef struct {
     supervisor_t supervisor;
     char * servicename;
-    int service_id;
+    //int service_id;
     int pid;
     char ** args;
     int status;
     int restart_times;
     int flags;
-} service_t;
+} service_info_t;
 
+
+service_info_t SERVICES[100];
+
+typedef int service_t;
+
+
+service_t LAST_INDEX = 0;
 
 //cerinta 2
 service_t service_create(

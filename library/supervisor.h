@@ -5,7 +5,7 @@
 #include "service.h"
 
 
-
+/*
 typedef struct {
     const char *servicename;
     pid_t pid;
@@ -13,7 +13,7 @@ typedef struct {
     int restart_times;
     supervisor_t supervisor;
 } service_info_t;
-
+*/
 
 typedef int supervisor_t;
 
