@@ -26,6 +26,7 @@ typedef struct {
     //int service_id;
     int pid;
     char ** args;
+    int argc;
     int status;
     int restart_times;
     int flags;
