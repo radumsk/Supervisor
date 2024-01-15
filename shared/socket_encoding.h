@@ -20,4 +20,6 @@ int receive_message(int socket, char** message, ssize_t* message_size);
 int send_command(int socket, char* command, ssize_t command_size, void* params, ssize_t params_size);
 int receive_command(int socket, char** command, ssize_t* command_size, void** params, ssize_t* params_size);
 
+int decode_length(const char* buffer);
+
 #endif //SUPERVISORDAEMON_SOCKET_ENCODING_H

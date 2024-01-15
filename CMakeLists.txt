@@ -11,7 +11,8 @@ add_executable(SupervisorDaemon
         shared/socket_encoding.h
         shared/socket_encoding.c
         daemon/methods.c
-        daemon/methods.h)
+        daemon/methods.h
+        shared/service.h)
 
 add_library(SupervisorLibrary SHARED library/supervisor.c library/supervisor.h
         library/service.h
@@ -24,4 +25,6 @@ add_executable(SupervisorTest
         shared/socket_encoding.h
         library/supervisor.h
         library/supervisor.c
+        library/service.h
+        library/service.c
         test/main.c)

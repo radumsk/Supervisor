@@ -5,40 +5,22 @@
 #ifndef SUPERVISORLIBRARY_SERVICE_H
 #define SUPERVISORLIBRARY_SERVICE_H
 
-#include "supervisor.h"
+#include "../shared/service.h"
 #include <sys/wait.h>
 
 
 typedef int supervisor_t;
 
-#define SUPERVISOR_FLAGS_CREATESTOPPED 0x1
-#define SUPERVISOR_FLAGS_RESTARTTIMES(times) ((times & 0xF) << 16)
-#define SUPERVISOR_STATUS_RUNNING 0x1
-#define SUPERVISOR_STATUS_PENDING 0x2
-#define SUPERVISOR_STATUS_STOPPED 0x4
-#define MAX_SERVICES 100
-#define MAX_RESTART_TIMES 3
-
-
-typedef struct {
+struct service_create_args_t {
     supervisor_t supervisor;
-    char * servicename;
-    //int service_id;
-    int pid;
-    char ** args;
+    const char *servicename;
+    const char *program_path;
+    const char **argv;
     int argc;
-    int status;
-    int restart_times;
     int flags;
-} service_info_t;
+};
 
-
-service_info_t SERVICES[100];
-
-typedef int service_t;
-
-
-service_t LAST_INDEX = 0;
+char* serialize_service_create_args(struct service_create_args_t args, int* size);
 
 //cerinta 2
 service_t service_create(

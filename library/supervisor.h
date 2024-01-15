@@ -15,15 +15,10 @@ typedef struct {
 } service_info_t;
 */
 
-typedef int supervisor_t;
-
 supervisor_t supervisor_init();
 int supervisor_close(supervisor_t);
 void bebino(supervisor_t);
 
-int service_open_response(supervisor_t supervisor, const char *servicename, int status);
-
-int determine_service_status(int status);
 
 
 #endif //SUPERVISORLIBRARY_SUPERVISOR_H

@@ -224,3 +224,18 @@ int receive_command(int socket, char **command, ssize_t *command_size, void **pa
     free(buffer);
     return 0;
 }
+
+int decode_length (const char *buffer) {
+    char *temp = malloc(LENGTH_SIZE + 1);
+    if (temp == NULL) {
+        return -1;
+    }
+    if (memcpy(temp, buffer, LENGTH_SIZE) == NULL) {
+        free(temp);
+        return -1;
+    }
+    temp[LENGTH_SIZE] = '\0';
+    long length = strtol(temp, NULL, 16);
+    free(temp);
+    return length;
+}

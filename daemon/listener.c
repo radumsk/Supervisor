@@ -43,6 +43,43 @@ void* listen_on_socket(void* params){
         } else if(!strcmp(command, "bebino")){
             print_bebino(client_socket, command_params);
             free(command_params);
+        } else if(!strcmp(command, "service_create")) {
+            struct service_create_args_t* args = deserialize_service_create_args(command_params, params_size);
+            if(args == NULL){
+                perror("deserialize_service_create_args");
+                return_value->error = errno;
+                return return_value;
+            }
+            service_t service = service_create(args->supervisor, args->servicename, args->program_path, args->argv, args->argc, args->flags);
+            if(service == -1){
+                printf("Error creating service\n");
+                if(send_message(client_socket, "error", 5)){
+                    return_value->error = errno;
+                    return return_value;
+                }
+            } else {
+                printf("Service created\n");
+                if(send_command(client_socket, "ok", 2, &service, sizeof(service_t))){
+                    return_value->error = errno;
+                    return return_value;
+                }
+            }
+            free(command_params);
+        } else if(!strcmp(command, "service_close")) {
+            service_t service = *((service_t*) command_params);
+            if(service_close(service)){
+                printf("Error closing service\n");
+                if(send_message(client_socket, "error", 5)){
+                    return_value->error = errno;
+                    return return_value;
+                }
+            } else {
+                printf("Service closed\n");
+                if(send_message(client_socket, "ok", 2)){
+                    return_value->error = errno;
+                    return return_value;
+                }
+            }
         }
         /*
         else if (!strcmp(command, "suspend")){
