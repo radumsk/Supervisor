@@ -81,6 +81,26 @@ void* listen_on_socket(void* params){
                 }
             }
         }
+//        else if(!strcmp(command, "service_open")){
+//            service_t service = *((service_t*) command_params);
+//
+//
+//
+//            service_t response = service_open(, NULL);
+//            if(response == -1){
+//                printf("Error opening service\n");
+//                if(send_message(client_socket, "error", 5)){
+//                    return_value->error = errno;
+//                    return return_value;
+//                }
+//            } else {
+//                printf("Service opened\n");
+//                if(send_command(client_socket, "ok", 2, &response, sizeof(service_t))){
+//                    return_value->error = errno;
+//                    return return_value;
+//                }
+//            }
+//        }
         /*
         else if (!strcmp(command, "suspend")){
 

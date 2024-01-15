@@ -12,7 +12,6 @@
 #include "listener.h"
 #include "../shared/socket_encoding.h"
 
-pthread_mutex_t mutex;
 
 int create_socket(int* server_socket, bool force){
     umask(0);
@@ -59,12 +58,7 @@ int create_socket(int* server_socket, bool force){
         perror("bind");
         return errno;
     }
-
-    // Init mutex
-    if(pthread_mutex_init(&mutex, NULL)){
-        perror("pthread_mutex_init");
-        return errno;
-    }
+    
 
     return 0;
 }

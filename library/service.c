@@ -126,7 +126,25 @@ service_t service_create(
 
     return *response;
 }
-
+//de aici scrie bebino
 int service_close(service_t service) {
 
+    char command[] = "service_close";
+    if(send_command(service, command, strlen(command), &service, sizeof(service))){
+        perror("send_command");
+        return -1;
+    }
+    //Receive response from daemon
+
+    char* command_response;
+    ssize_t command_response_size;
+    if(receive_command(service, &command_response, &command_response_size, &service, (ssize_t *) sizeof(service))){
+        perror("receive_command");
+        return -1;
+    }
+
+    if(strcmp(command_response, "ok") != 0){
+        printf("Received unexpected response: %s\n", command_response);
+        return -1;
+    }
 }
