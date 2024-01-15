@@ -14,6 +14,7 @@
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
+pthread_mutex_t mutex_daemon = PTHREAD_MUTEX_INITIALIZER;
 
 
 service_t service_create(
@@ -24,6 +25,8 @@ service_t service_create(
         int argc,
         int flags
 ) {
+
+    pthread_mutex_lock(&mutex_daemon);
 
     service_t new_service_id = -1;
 
@@ -37,7 +40,13 @@ service_t service_create(
     if(new_service_id == -1)
         new_service_id = LAST_INDEX++;
 
+
+
     pthread_mutex_lock(&mutex);
+
+    SERVICES[new_service_id].status = 1;
+
+    pthread_mutex_unlock(&mutex_daemon);
 
     SERVICES[new_service_id].servicename = strdup(servicename);
     SERVICES[new_service_id].supervisor = supervisor;
