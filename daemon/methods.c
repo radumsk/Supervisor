@@ -158,13 +158,13 @@ int service_close(service_t service) {
 service_t service_open(const char *servicename) {
     for(int i=0; i < LAST_INDEX; i++){
         if(strcmp(SERVICES[i].servicename, servicename) == 0){
-            if(getpgid(SERVICES[i].pid) < 0){
+            if( kill(SERVICES[i].pid, 0)  != 0 ){
                 SERVICES[i].status = SUPERVISOR_STATUS_STOPPED;
 
                 service_t new_service = service_create(SERVICES[i].servicename, SERVICES[i].args[0], (const char **) SERVICES[i].args,
                                SERVICES[i].argc, SERVICES[i].flags | SUPERVISOR_FLAGS_RESTARTTIMES(SERVICES[i].restart_times + 1));
                 service_close(i);
-
+                printf("Service %s restarted\n", servicename);
                 return new_service;
 
             }
