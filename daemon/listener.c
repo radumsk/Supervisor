@@ -13,18 +13,18 @@
 
 extern pthread_mutex_t mutex;
 
-void* listen_on_socket(void* params){
+void* listen_on_socket(void* params) {
     bool stop = false;
-    int client_socket = ((struct listen_params_t*) params)->client_socket;
+    int client_socket = ((struct listen_params_t *) params)->client_socket;
     struct listen_return_t* return_value = malloc(sizeof(struct listen_return_t));
 
-//    free(params);
-    while (!stop){
+    //    free(params);
+    while (!stop) {
         char* command;
         ssize_t command_size;
         void* command_params;
         ssize_t params_size;
-        if(receive_command(client_socket, &command, &command_size, &command_params, &params_size)){
+        if (receive_command(client_socket, &command, &command_size, &command_params, &params_size)) {
             perror("receive_message");
             return_value->error = errno;
             return return_value;
@@ -34,136 +34,242 @@ void* listen_on_socket(void* params){
         printf("Received message: %s\n", command);
 
         // Check if the message is "stop"
-        if(!strcmp(command, "stop")){
-            if(send_message(client_socket, "ok", 2)){
+        if (!strcmp(command, "stop")) {
+            if (send_message(client_socket, "ok", 2)) {
                 return_value->error = errno;
                 return return_value;
             }
             stop = true;
-        } else if(!strcmp(command, "bebino")){
-            print_bebino(client_socket, command_params);
-            free(command_params);
-        } else if(!strcmp(command, "service_create")) {
+        } else if (!strcmp(command, "service_create")) {
             struct service_create_args_t* args = deserialize_service_create_args(command_params, params_size);
-            if(args == NULL){
+            if (args == NULL) {
                 perror("deserialize_service_create_args");
                 return_value->error = errno;
                 return return_value;
             }
-            service_t service = service_create(args->supervisor, args->servicename, args->program_path, args->argv, args->argc, args->flags);
-            if(service == -1){
+            service_t service = service_create(args->servicename, args->program_path, args->argv,
+                                               args->argc, args->flags);
+            if (service == -1) {
                 printf("Error creating service\n");
-                if(send_message(client_socket, "error", 5)){
+                if (send_error(client_socket, -1)) {
                     return_value->error = errno;
                     return return_value;
                 }
             } else {
                 printf("Service created\n");
-                if(send_command(client_socket, "ok", 2, &service, sizeof(service_t))){
+                char* messageBuffer = malloc(2);
+                strcpy(messageBuffer, "ok");
+                char* paramsBuffer = malloc(sizeof(service_t));
+                memcpy(paramsBuffer, &service, sizeof(service_t));
+                if (send_command(client_socket, messageBuffer, 2, paramsBuffer, sizeof(service_t))) {
                     return_value->error = errno;
                     return return_value;
                 }
             }
             free(command_params);
-        } else if(!strcmp(command, "service_close")) {
-            service_t service = *((service_t*) command_params);
-            if(service_close(service)){
+        } else if (!strcmp(command, "service_close")) {
+            service_t service = *((service_t *) command_params);
+            int error = service_close(service);
+            if (error) {
                 printf("Error closing service\n");
-                if(send_message(client_socket, "error", 5)){
-                    return_value->error = errno;
+                if (send_error(client_socket, error)) {
+                    return_value->error = error;
                     return return_value;
                 }
             } else {
                 printf("Service closed\n");
-                if(send_message(client_socket, "ok", 2)){
+                if (send_ok(client_socket)) {
+                    return_value->error = errno;
+                    return return_value;
+                }
+            }
+        } else if (!strcmp(command, "service_status")) {
+            service_t service = *((service_t *) command_params);
+            int status = service_status(service);
+            if (status < 0) {
+                printf("Error getting status\n");
+                if (send_error(client_socket, status)) {
+                    return_value->error = status;
+                    return return_value;
+                }
+            } else {
+                printf("Service status: %d\n", status);
+                char* messageBuffer = malloc(2);
+                strcpy(messageBuffer, "ok");
+                char* paramsBuffer = malloc(sizeof(int));
+                memcpy(paramsBuffer, &status, sizeof(int));
+                if (send_command(client_socket, messageBuffer, 2, paramsBuffer, sizeof(int))) {
+                    return_value->error = errno;
+                    return return_value;
+                }
+            }
+        } else if (!strcmp(command, "service_open")) {
+            int servicename_size = decode_length(command_params);
+            char* servicename = malloc(servicename_size + 1);
+            memcpy(servicename, command_params + LENGTH_SIZE, servicename_size);
+            servicename[servicename_size] = '\0';
+            service_t service = service_open(servicename);
+            if (service == -1) {
+                printf("Error opening service\n");
+                if (send_error(client_socket, -1)) {
+                    return_value->error = errno;
+                    return return_value;
+                }
+            } else {
+                printf("Service opened\n");
+                char* messageBuffer = malloc(2);
+                strcpy(messageBuffer, "ok");
+                char* paramsBuffer = malloc(sizeof(service_t));
+                memcpy(paramsBuffer, &service, sizeof(service_t));
+                if (send_command(client_socket, messageBuffer, 2, paramsBuffer, sizeof(service_t))) {
+                    return_value->error = errno;
+                    return return_value;
+                }
+            }
+        } else if(!strcmp(command, "service_suspend")) {
+            service_t service = *((service_t *) command_params);
+            int status = service_status(service);
+            if (status < 0) {
+                printf("Error suspending service\n");
+                if (send_error(client_socket, status)) {
+                    return_value->error = status;
+                    return return_value;
+                }
+            } else {
+                printf("Service suspended\n");
+                if(send_ok(client_socket)){
+                    return_value->error = errno;
+                    return return_value;
+                }
+            }
+        } else if(!strcmp(command, "service_resume")) {
+            service_t service = *((service_t *) command_params);
+            int status = service_status(service);
+            if (status < 0) {
+                printf("Error resuming service\n");
+                if (send_error(client_socket, status)) {
+                    return_value->error = status;
+                    return return_value;
+                }
+            } else {
+                printf("Service resumed\n");
+                if(send_ok(client_socket)){
+                    return_value->error = errno;
+                    return return_value;
+                }
+            }
+        } else if(!strcmp(command, "service_cancel")) {
+            service_t service = *((service_t *) command_params);
+            int status = service_status(service);
+            if (status < 0) {
+                printf("Error canceling service\n");
+                if (send_error(client_socket, status)) {
+                    return_value->error = status;
+                    return return_value;
+                }
+            } else {
+                printf("Service canceled\n");
+                if(send_ok(client_socket)){
+                    return_value->error = errno;
+                    return return_value;
+                }
+            }
+        } else if(!strcmp(command, "service_remove")) {
+            service_t service = *((service_t *) command_params);
+            int status = service_status(service);
+            if (status < 0) {
+                printf("Error removing service\n");
+                if (send_error(client_socket, status)) {
+                    return_value->error = status;
+                    return return_value;
+                }
+            } else {
+                printf("Service removed\n");
+                if(send_ok(client_socket)){
+                    return_value->error = errno;
+                    return return_value;
+                }
+            }
+        } else if(!strcmp(command, "supervisor_list")) {
+            unsigned int count;
+            char** service_names;
+            int error = supervisor_list(&service_names, &count);
+            if (error) {
+                printf("Error listing services\n");
+                if (send_error(client_socket, error)) {
+                    return_value->error = error;
+                    return return_value;
+                }
+            } else {
+                printf("Services listed\n");
+                char* messageBuffer = malloc(2);
+                strcpy(messageBuffer, "ok");
+                ssize_t totalBufferLength = sizeof(unsigned int);
+                for (int i = 0; i < count; i++) {
+                    totalBufferLength += LENGTH_SIZE + strlen(service_names[i]);
+                }
+                char* paramsBuffer = malloc(totalBufferLength);
+                memcpy(paramsBuffer, &count, sizeof(unsigned int));
+                ssize_t offset = sizeof(unsigned int);
+                for (int i = 0; i < count; i++) {
+                    ssize_t service_name_length = strlen(service_names[i]);
+                    char* service_name_length_buffer = malloc(LENGTH_SIZE + 1);
+                    sprintf(service_name_length_buffer, "%0*zx", LENGTH_SIZE, (int) service_name_length);
+                    memcpy(paramsBuffer + offset, service_name_length_buffer, LENGTH_SIZE);
+                    offset += LENGTH_SIZE;
+                    memcpy(paramsBuffer + offset, service_names[i], service_name_length);
+                    offset += service_name_length;
+                }
+                if (send_command(client_socket, messageBuffer, 2, paramsBuffer, totalBufferLength)) {
+                    return_value->error = errno;
+                    return return_value;
+                }
+            }
+        } else if(!strcmp(command, "supervisor_freelist")) {
+            // Get count
+            int count = decode_length(command_params);
+            // Get service names
+            char** service_names = malloc(count * sizeof(char*));
+            ssize_t offset = LENGTH_SIZE;
+            for(int i = 0; i < count; i++){
+                int service_name_length = decode_length(command_params + offset);
+                offset += LENGTH_SIZE;
+                service_names[i] = malloc(service_name_length + 1);
+                memcpy(service_names[i], command_params + offset, service_name_length);
+                service_names[i][service_name_length] = '\0';
+                offset += service_name_length;
+            }
+            int error = supervisor_freelist(service_names, count);
+            if (error) {
+                printf("Error freeing list\n");
+                if (send_error(client_socket, error)) {
+                    return_value->error = error;
+                    return return_value;
+                }
+            } else {
+                printf("List freed\n");
+                if(send_ok(client_socket)){
                     return_value->error = errno;
                     return return_value;
                 }
             }
         }
-//        else if(!strcmp(command, "service_open")){
-//            service_t service = *((service_t*) command_params);
-//
-//
-//
-//            service_t response = service_open(, NULL);
-//            if(response == -1){
-//                printf("Error opening service\n");
-//                if(send_message(client_socket, "error", 5)){
-//                    return_value->error = errno;
-//                    return return_value;
-//                }
-//            } else {
-//                printf("Service opened\n");
-//                if(send_command(client_socket, "ok", 2, &response, sizeof(service_t))){
-//                    return_value->error = errno;
-//                    return return_value;
-//                }
-//            }
-//        }
-        /*
-        else if (!strcmp(command, "suspend")){
-
-            if(send_message(client_socket, "ok", 2)){
-                return_value->error = errno;
-                return return_value;
-            }
-
-            kill(getpid(), SIGSTOP);
-        }
-
-        else if (!strcmp(command, "resume")){
-
-            if(send_message(client_socket, "ok", 2)){
-                return_value->error = errno;
-                return return_value;
-            }
-
-            kill(getpid(), SIGCONT);
-        }
-
-        else if(!strcmp(command, "cancel")) {
-
-            if(send_message(client_socket, "ok", 2)){
-                return_value->error = errno;
-                return return_value;
-            }
-
-            int result = kill(getpid(), SIGKILL);
-            if (result) {
-                perror("kill");
-                return_value->error = errno;
-                return return_value;
-            }
-        }
-        else if(!strcmp(command, "remove")){
-            // inchide handlerul obtinut cu service_open() si elibereaza resursele asociate
-
-            if(send_message(client_socket, "ok", 2)){
-                return_value->error = errno;
-                return return_value;
-            }
-            free(command_params);
-            free(command);
-            stop = true;
-
-        }
-         */
         else {
             printf("Received unexpected command: %s\n", command);
-            if(send_message(client_socket, "error", 5)){
+            if (send_message(client_socket, "error", 5)) {
                 return_value->error = errno;
                 return return_value;
             }
         }
     }
     // Close the socket
-    if(close(client_socket)){
+    if (close(client_socket)) {
         perror("close");
         return_value->error = errno;
         return return_value;
     }
     printf("Stopping\n");
     return_value->error = 0;
+    stop = true;
     return return_value;
 }

@@ -70,7 +70,6 @@ struct service_create_args_t* deserialize_service_create_args(char* buffer, ssiz
 }
 
 service_t service_create(
-        supervisor_t supervisor,
         const char * servicename,
         const char * program_path,
         const char ** argv,
@@ -93,7 +92,6 @@ service_t service_create(
         new_service_id = LAST_INDEX++;
 
     SERVICES[new_service_id].servicename = strdup(servicename);
-    SERVICES[new_service_id].supervisor = supervisor;
 //    SERVICES[new_service_id].flags = flags;
     SERVICES[new_service_id].argc = argc;
 
@@ -133,7 +131,14 @@ service_t service_create(
         SERVICES[new_service_id].args[argc + 1] = NULL;
         execv(program_path, SERVICES[new_service_id].args);
         perror("execv");
-        return new_service_id;
+        printf("Error executing program %s\n", program_path);
+        char cwd[1024];
+        if (getcwd(cwd, sizeof(cwd)) != NULL) {
+            printf("Current working dir: %s\n", cwd);
+        } else {
+            perror("getcwd");
+        }
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -151,13 +156,13 @@ int service_close(service_t service) {
 }
 
 
-service_t service_open(supervisor_t supervisor, const char *servicename) {
+service_t service_open(const char *servicename) {
     for(int i=0; i < LAST_INDEX; i++){
         if(strcmp(SERVICES[i].servicename, servicename) == 0){
             if(getpgid(SERVICES[i].pid) < 0){
                 SERVICES[i].status = SUPERVISOR_STATUS_STOPPED;
 
-                service_t new_service = service_create(supervisor, SERVICES[i].servicename, SERVICES[i].args[0], (const char **) SERVICES[i].args,
+                service_t new_service = service_create(SERVICES[i].servicename, SERVICES[i].args[0], (const char **) SERVICES[i].args,
                                SERVICES[i].argc, SERVICES[i].flags | SUPERVISOR_FLAGS_RESTARTTIMES(SERVICES[i].restart_times + 1));
                 service_close(i);
 
@@ -221,7 +226,6 @@ int service_remove(service_t service){
 }
 
 int supervisor_list(
-        supervisor_t supervisor,
         char ***service_names,
         unsigned int *count
 ) {
@@ -232,7 +236,7 @@ int supervisor_list(
     *count = 0;
 
     for (int i = 0; i < MAX_SERVICES; i++) {
-        if (SERVICES[i].supervisor == supervisor && SERVICES[i].status != 0) {
+        if (SERVICES[i].status != 0) {
             (*count)++;
         }
     }
@@ -250,7 +254,7 @@ int supervisor_list(
 
     int index = 0;
     for (int i = 0; i < MAX_SERVICES; i++) {
-        if (SERVICES[i].supervisor == supervisor && SERVICES[i].status != 0) {
+        if (SERVICES[i].status != 0) {
             (*service_names)[index] = strdup(SERVICES[i].servicename);
             if ((*service_names)[index] == NULL) {
                 perror("strdup");

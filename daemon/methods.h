@@ -8,16 +8,20 @@ struct bebino_t{
     char y;
 };
 
-void print_bebino(int socket, struct bebino_t* bebino);
-
-struct service_create_args_t {
+struct service_info_t{
     supervisor_t supervisor;
-    char *servicename;
-    char *program_path;
-    char **argv;
+    char * servicename;
+    //int service_id;
+    int pid;
+    char ** args;
     int argc;
+    int status;
+    int restart_times;
     int flags;
 };
+
+
+void print_bebino(int socket, struct bebino_t* bebino);
 
 struct service_create_args_t* deserialize_service_create_args(char* buffer, ssize_t params_size);
 
@@ -26,7 +30,6 @@ char* serialize_service_create_args(struct service_create_args_t args, int* size
 
 //cerinta 2
 service_t service_create(
-        supervisor_t supervisor,
         const char *servicename,
         const char *program_path,
         const char **argv,
@@ -37,7 +40,6 @@ int service_close(service_t service);
 
 //cerinta 3
 service_t service_open(
-        supervisor_t supervisor,
         const char *servicename
 );
 int service_status(service_t service);
@@ -52,6 +54,13 @@ int service_remove(service_t service);
 
 //cerinta 6
 
-service_t service_restart(supervisor_t supervisor, const char *servicename, const char *program_path, const char **argv, int argc, int flags);
+service_t service_restart(const char *servicename, const char *program_path, const char **argv, int argc, int flags);
+
+int supervisor_list(
+        char ***service_names,
+        unsigned int *count
+);
+
+int supervisor_freelist(char **service_names, int count);
 
 #endif //SUPERVISORLIBRARY_METHODS_H

@@ -121,7 +121,7 @@ int receive_message(int client_socket, char **message, ssize_t *message_size) {
         }
         ssize_t bytes_to_read = buffer_size - total_read_bytes; // How many bytes are left until buffer is full
         read_bytes = recv(client_socket, buffer + total_read_bytes, bytes_to_read, 0);
-        if (read_bytes == -1) {
+        if (read_bytes <= 0) {
             perror("recv");
             free(buffer);
             return errno;
@@ -151,12 +151,19 @@ int send_command(int socket, char *command, ssize_t command_size, void *params, 
     char *buffer = malloc(command_size + params_size + LENGTH_SIZE);
     if (buffer == NULL) {
         perror("malloc");
+        free(command);
+        if(params != NULL)
+            free(params);
         return errno;
     }
     // Copy command to buffer
     if (memcpy(buffer, command, command_size) == NULL) {
         perror("memcpy");
         free(buffer);
+        free(command);
+        if(params != NULL)
+            free(params);
+        return errno;
         return errno;
     }
     // Add command delimiter
@@ -166,6 +173,8 @@ int send_command(int socket, char *command, ssize_t command_size, void *params, 
         if (memcpy(buffer + command_size + 1, params, params_size) == NULL) {
             perror("memcpy");
             free(buffer);
+            free(command);
+            free(params);
             return errno;
         }
     }
@@ -173,9 +182,15 @@ int send_command(int socket, char *command, ssize_t command_size, void *params, 
     if (send_message(socket, buffer, command_size + params_size + 1)) {
         perror("send_message");
         free(buffer);
+        free(command);
+        if(params != NULL)
+            free(params);
         return errno;
     }
     free(buffer);
+    free(command);
+    if(params != NULL)
+        free(params);
     return 0;
 }
 
@@ -238,4 +253,16 @@ int decode_length (const char *buffer) {
     long length = strtol(temp, NULL, 16);
     free(temp);
     return length;
+}
+
+int send_ok(int socket) {
+    char* ok = malloc(2);
+    strcpy(ok, "ok");
+    return send_command(socket, ok, 2, NULL, 0);
+}
+
+int send_error(int socket, int error) {
+    char* errorBuffer = malloc(sizeof(error));
+    memccpy(errorBuffer, &error, sizeof(error), sizeof(error));
+    return send_command(socket, "error", 5, errorBuffer, sizeof(error));
 }

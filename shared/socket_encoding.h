@@ -19,6 +19,8 @@ int send_message(int socket, char* message, ssize_t message_size);
 int receive_message(int socket, char** message, ssize_t* message_size);
 int send_command(int socket, char* command, ssize_t command_size, void* params, ssize_t params_size);
 int receive_command(int socket, char** command, ssize_t* command_size, void** params, ssize_t* params_size);
+int send_ok(int socket);
+int send_error(int socket, int error);
 
 int decode_length(const char* buffer);
 

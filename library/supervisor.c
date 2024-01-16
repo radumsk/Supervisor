@@ -38,7 +38,9 @@ supervisor_t supervisor_init(){
 }
 
 int supervisor_close(supervisor_t supervisor){
-    if(send_command(supervisor, "stop", 4, NULL, 0)){
+    char* commandBuffer = malloc(4);
+    strcpy(commandBuffer, "stop");
+    if(send_command(supervisor, commandBuffer, 4, NULL, 0)){
         perror("send_message");
         return errno;
     }

@@ -11,18 +11,16 @@
 
 typedef int supervisor_t;
 
-struct service_info_t{
+typedef int service_t;
+
+struct service_create_args_t {
     supervisor_t supervisor;
-    char * servicename;
-    //int service_id;
-    int pid;
-    char ** args;
+    char *servicename;
+    char *program_path;
+    char **argv;
     int argc;
-    int status;
-    int restart_times;
     int flags;
 };
 
-typedef int service_t;
 
 #endif //SERVICE_H

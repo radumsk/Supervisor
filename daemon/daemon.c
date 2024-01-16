@@ -12,7 +12,6 @@
 #include "listener.h"
 #include "../shared/socket_encoding.h"
 
-
 int create_socket(int* server_socket, bool force){
     umask(0);
     // Check if socket already exists
