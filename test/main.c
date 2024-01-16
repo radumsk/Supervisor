@@ -11,19 +11,22 @@ int main(){
     int status = service_status(supervisor, service);
     printf("Service status: %d\n", status);
 
+    int service_suspend_status = service_suspend(supervisor, service);
+    printf("Service suspend status: %d\n", service_suspend_status);
+
     // service_t service2 = service_create(supervisor, "bebino2", "./executabileTest/test3", NULL, 0, 0);
     // int status2 = service_status(supervisor, service2);
     // printf("Service status: %d\n", status2);
 
-    unsigned int count;
-    char** service_names;
-    supervisor_list(supervisor, &service_names, &count);
-    // Print service names
-    for(int i = 0; i < count; i++){
-        printf("Service name: %s\n", service_names[i]);
-    }
-
-    supervisor_freelist(supervisor, service_names, count);
+    // unsigned int count;
+    // char** service_names;
+    // supervisor_list(supervisor, &service_names, &count);
+    // // Print service names
+    // for(int i = 0; i < count; i++){
+    //     printf("Service name: %s\n", service_names[i]);
+    // }
+    //
+    // supervisor_freelist(supervisor, service_names, count);
 
 
     // service_close(supervisor, service);

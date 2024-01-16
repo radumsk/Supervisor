@@ -128,7 +128,7 @@ void* listen_on_socket(void* params) {
             }
         } else if(!strncmp(command, "service_suspend", command_size)) {
             service_t service = *((service_t *) command_params);
-            int status = service_status(service);
+            int status = service_suspend(service);
             if (status < 0) {
                 printf("Error suspending service\n");
                 if (send_error(client_socket, status)) {
@@ -144,7 +144,7 @@ void* listen_on_socket(void* params) {
             }
         } else if(!strncmp(command, "service_resume", command_size)) {
             service_t service = *((service_t *) command_params);
-            int status = service_status(service);
+            int status = service_resume(service);
             if (status < 0) {
                 printf("Error resuming service\n");
                 if (send_error(client_socket, status)) {
@@ -160,7 +160,7 @@ void* listen_on_socket(void* params) {
             }
         } else if(!strncmp(command, "service_cancel", command_size)) {
             service_t service = *((service_t *) command_params);
-            int status = service_status(service);
+            int status = service_cancel(service);
             if (status < 0) {
                 printf("Error canceling service\n");
                 if (send_error(client_socket, status)) {
@@ -176,7 +176,7 @@ void* listen_on_socket(void* params) {
             }
         } else if(!strncmp(command, "service_remove", command_size)) {
             service_t service = *((service_t *) command_params);
-            int status = service_status(service);
+            int status = service_remove(service);
             if (status < 0) {
                 printf("Error removing service\n");
                 if (send_error(client_socket, status)) {
