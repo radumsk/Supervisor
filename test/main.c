@@ -18,7 +18,8 @@ int main(){
 
 
     service_t service3 = service_create(supervisor, "bebino3", "../executabileTest/test3", NULL, 0, 0);
-    //service_t foundService3 = service_open(supervisor, "bebino3");
+    service_cancel(supervisor, service3);
+    service_t foundService3 = service_open(supervisor, "bebino3");
     int status3 = service_status(supervisor, service3);
     printf("Service status: %d\n", status3);
 
@@ -28,11 +29,11 @@ int main(){
     service_t foundService4 = service_open(supervisor, "bebino4");
     status4 = service_status(supervisor, service4);
     printf("Service status: %d\n", status4);
-//
+
 //    service_t service5 = service_create(supervisor, "bebino5", "../executabileTest/test5", NULL, 0, 0);
 //    int status5 = service_status(supervisor, service5);
 //    printf("Service status: %d\n", status5);
-//
+
 //    service_t service6 = service_create(supervisor, "bebino6", "../executabileTest/test6", NULL, 0, 0);
 //    int status6 = service_status(supervisor, service6);
 //    printf("Service status: %d\n", status6);
