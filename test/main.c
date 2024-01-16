@@ -11,9 +11,9 @@ int main(){
     int status = service_status(supervisor, service);
     printf("Service status: %d\n", status);
 
-    service_t service2 = service_create(supervisor, "bebino2", "./executabileTest/test3", NULL, 0, 0);
-    int status2 = service_status(supervisor, service);
-    printf("Service status: %d\n", status2);
+    // service_t service2 = service_create(supervisor, "bebino2", "./executabileTest/test3", NULL, 0, 0);
+    // int status2 = service_status(supervisor, service2);
+    // printf("Service status: %d\n", status2);
 
     unsigned int count;
     char** service_names;

@@ -130,7 +130,6 @@ service_t service_create(
         }
         SERVICES[new_service_id].args[argc + 1] = NULL;
         execv(program_path, SERVICES[new_service_id].args);
-        perror("execv");
         printf("Error executing program %s\n", program_path);
         char cwd[1024];
         if (getcwd(cwd, sizeof(cwd)) != NULL) {

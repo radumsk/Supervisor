@@ -50,7 +50,7 @@ int supervisor_close(supervisor_t supervisor){
         perror("receive_message");
         return errno;
     }
-    if(strcmp(message, "ok") != 0){
+    if(strncmp(message, "ok", message_size) != 0){
         printf("Received unexpected message: %s\n", message);
         return -1;
     }
@@ -84,7 +84,7 @@ void bebino(supervisor_t supervisor){
         perror("receive_command");
         return;
     }
-    if(strcmp(command, "ok") != 0){
+    if(strncmp(command, "ok", command_size) != 0){
         printf("Received unexpected command: %s\n", command);
         return;
     }

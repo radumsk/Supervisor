@@ -120,7 +120,7 @@ service_t service_create(
         return -1;
     }
 
-    if(strcmp(command_response, "ok") != 0){
+    if(strncmp(command_response, "ok", command_response_size) != 0){
         printf("Received unexpected response: %s\n", command_response);
         return -1;
     }
@@ -155,7 +155,7 @@ int service_close(supervisor_t supervisor, service_t service) {
         return -1;
     }
 
-    if(strcmp(command_response, "ok") != 0){
+    if(strncmp(command_response, "ok", command_response_size) != 0){
         printf("Received error response: %s\n", response);
         return -1;
     }
@@ -188,7 +188,7 @@ int service_status(supervisor_t supervisor, service_t service) {
         return -1;
     }
 
-    if(strcmp(command_response, "ok") != 0){
+    if(strncmp(command_response, "ok", command_response_size) != 0){
         printf("Received error response: %s\n", response);
         return -1;
     }
@@ -253,7 +253,7 @@ int service_suspend(supervisor_t supervisor, service_t service) {
         return -1;
     }
 
-    if(strcmp(command_response, "ok") != 0){
+    if(strncmp(command_response, "ok", command_response_size) != 0){
         printf("Received error response: %s\n", response);
         return -1;
     }
@@ -288,7 +288,7 @@ int service_resume(supervisor_t supervisor, service_t service) {
         return -1;
     }
 
-    if(strcmp(command_response, "ok") != 0){
+    if(strncmp(command_response, "ok", command_response_size) != 0){
         printf("Received error response: %s\n", response);
         return -1;
     }
@@ -323,7 +323,7 @@ int service_cancel(supervisor_t supervisor, service_t service) {
         return -1;
     }
 
-    if(strcmp(command_response, "ok") != 0){
+    if(strncmp(command_response, "ok", command_response_size) != 0){
         printf("Received error response: %s\n", response);
         return -1;
     }
@@ -358,7 +358,7 @@ int service_remove(supervisor_t supervisor, service_t service) {
         return -1;
     }
 
-    if(strcmp(command_response, "ok") != 0){
+    if(strncmp(command_response, "ok", command_response_size) != 0){
         printf("Received error response: %s\n", response);
         return -1;
     }
@@ -414,7 +414,7 @@ int supervisor_list(supervisor_t supervisor, char*** service_names, unsigned int
 }
 
 int supervisor_freelist(supervisor_t supervisor, char** service_names, int count) {
-    char* command = malloc(strlen("service_remove") + 1);
+    char* command = malloc(strlen("service_freelist") + 1);
     if (command == NULL) {
         return -1;
     }
@@ -456,7 +456,7 @@ int supervisor_freelist(supervisor_t supervisor, char** service_names, int count
         perror("receive_command");
         return -1;
     }
-    if(strcmp(command_response, "ok") != 0){
+    if(strncmp(command_response, "ok", command_response_size) != 0){
         printf("Received error response: %s\n", response);
         return -1;
     }

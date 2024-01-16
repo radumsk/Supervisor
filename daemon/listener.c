@@ -34,13 +34,13 @@ void* listen_on_socket(void* params) {
         printf("Received message: %s\n", command);
 
         // Check if the message is "stop"
-        if (!strcmp(command, "stop")) {
+        if (!strncmp(command, "stop", command_size)) {
             if (send_message(client_socket, "ok", 2)) {
                 return_value->error = errno;
                 return return_value;
             }
             stop = true;
-        } else if (!strcmp(command, "service_create")) {
+        } else if (!strncmp(command, "service_create", command_size)) {
             struct service_create_args_t* args = deserialize_service_create_args(command_params, params_size);
             if (args == NULL) {
                 perror("deserialize_service_create_args");
@@ -67,7 +67,7 @@ void* listen_on_socket(void* params) {
                 }
             }
             free(command_params);
-        } else if (!strcmp(command, "service_close")) {
+        } else if (!strncmp(command, "service_close", command_size)) {
             service_t service = *((service_t *) command_params);
             int error = service_close(service);
             if (error) {
@@ -83,7 +83,7 @@ void* listen_on_socket(void* params) {
                     return return_value;
                 }
             }
-        } else if (!strcmp(command, "service_status")) {
+        } else if (!strncmp(command, "service_status", command_size)) {
             service_t service = *((service_t *) command_params);
             int status = service_status(service);
             if (status < 0) {
@@ -103,7 +103,7 @@ void* listen_on_socket(void* params) {
                     return return_value;
                 }
             }
-        } else if (!strcmp(command, "service_open")) {
+        } else if (!strncmp(command, "service_open", command_size)) {
             int servicename_size = decode_length(command_params);
             char* servicename = malloc(servicename_size + 1);
             memcpy(servicename, command_params + LENGTH_SIZE, servicename_size);
@@ -126,7 +126,7 @@ void* listen_on_socket(void* params) {
                     return return_value;
                 }
             }
-        } else if(!strcmp(command, "service_suspend")) {
+        } else if(!strncmp(command, "service_suspend", command_size)) {
             service_t service = *((service_t *) command_params);
             int status = service_status(service);
             if (status < 0) {
@@ -142,7 +142,7 @@ void* listen_on_socket(void* params) {
                     return return_value;
                 }
             }
-        } else if(!strcmp(command, "service_resume")) {
+        } else if(!strncmp(command, "service_resume", command_size)) {
             service_t service = *((service_t *) command_params);
             int status = service_status(service);
             if (status < 0) {
@@ -158,7 +158,7 @@ void* listen_on_socket(void* params) {
                     return return_value;
                 }
             }
-        } else if(!strcmp(command, "service_cancel")) {
+        } else if(!strncmp(command, "service_cancel", command_size)) {
             service_t service = *((service_t *) command_params);
             int status = service_status(service);
             if (status < 0) {
@@ -174,7 +174,7 @@ void* listen_on_socket(void* params) {
                     return return_value;
                 }
             }
-        } else if(!strcmp(command, "service_remove")) {
+        } else if(!strncmp(command, "service_remove", command_size)) {
             service_t service = *((service_t *) command_params);
             int status = service_status(service);
             if (status < 0) {
@@ -190,7 +190,7 @@ void* listen_on_socket(void* params) {
                     return return_value;
                 }
             }
-        } else if(!strcmp(command, "supervisor_list")) {
+        } else if(!strncmp(command, "supervisor_list", command_size)) {
             unsigned int count;
             char** service_names;
             int error = supervisor_list(&service_names, &count);
@@ -225,7 +225,7 @@ void* listen_on_socket(void* params) {
                     return return_value;
                 }
             }
-        } else if(!strcmp(command, "supervisor_freelist")) {
+        } else if(!strncmp(command, "supervisor_freelist", command_size)) {
             // Get count
             int count = decode_length(command_params);
             // Get service names
@@ -256,7 +256,7 @@ void* listen_on_socket(void* params) {
         }
         else {
             printf("Received unexpected command: %s\n", command);
-            if (send_message(client_socket, "error", 5)) {
+            if (send_error(client_socket, -1)) {
                 return_value->error = errno;
                 return return_value;
             }
