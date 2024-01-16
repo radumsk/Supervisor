@@ -63,34 +63,3 @@ int supervisor_close(supervisor_t supervisor){
 
 
 
-struct bebino_t{
-    int x;
-    char y;
-};
-
-void bebino(supervisor_t supervisor){
-    struct bebino_t bebino;
-    bebino.x = 5;
-    bebino.y = 'a';
-    if(send_command(supervisor, "bebino", 6, &bebino, sizeof(struct bebino_t))){
-        perror("send_command");
-        return;
-    }
-    char* command;
-    ssize_t command_size;
-    void* params;
-    ssize_t params_size;
-    if(receive_command(supervisor, &command, &command_size, &params, &params_size)){
-        perror("receive_command");
-        return;
-    }
-    if(strncmp(command, "ok", command_size) != 0){
-        printf("Received unexpected command: %s\n", command);
-        return;
-    }
-    struct bebino_t* bebino_response = (struct bebino_t*) params;
-    printf("Received bebino response: %d, %c\n", bebino_response->x, bebino_response->y);
-
-    free(command);
-    free(params);
-}

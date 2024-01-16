@@ -25,8 +25,10 @@ int main(){
 
     service_t service4 = service_create(supervisor, "bebino4", "../executabileTest/test4", NULL, 0, 0);
     int status4 = service_status(supervisor, service4);
-    sleep(10);
-    service_t foundService4 = service_open(supervisor, "bebino4");
+    //sleep(10);
+    service_cancel(supervisor, service4);
+    //service_t foundService4 = service_open(supervisor, "bebino4");
+    service_cancel(supervisor, service4);
     status4 = service_status(supervisor, service4);
     printf("Service status: %d\n", status4);
 

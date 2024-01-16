@@ -3,10 +3,7 @@
 
 #include "../shared/service.h"
 
-struct bebino_t{
-    int x;
-    char y;
-};
+
 
 struct service_info_t{
     supervisor_t supervisor;
@@ -14,14 +11,17 @@ struct service_info_t{
     //int service_id;
     int pid;
     char ** args;
+    char * program_path;
     int argc;
     int status;
     int restart_times;
     int flags;
+    char * process_name;
 };
 
 
-void print_bebino(int socket, struct bebino_t* bebino);
+const char* get_process_name_by_pid(const int pid);
+
 
 struct service_create_args_t* deserialize_service_create_args(char* buffer, ssize_t params_size);
 

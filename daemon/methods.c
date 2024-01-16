@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "methods.h"
+#include <string.h>
 
 #include <signal.h>
 #include <stdlib.h>
@@ -14,18 +15,6 @@ struct service_info_t SERVICES[100];
 
 service_t LAST_INDEX = 0;
 
-void print_bebino(int socket, struct bebino_t* bebino){
-    pthread_mutex_lock(&mutex);
-    printf("Bebino: %d, %c\n", bebino->x, bebino->y);
-    struct bebino_t bebino_response;
-    bebino_response.x = 10;
-    bebino_response.y = 'b';
-    if(send_command(socket, "ok", 2, &bebino_response, sizeof(struct bebino_t))){
-        perror("send_command");
-        return;
-    }
-    pthread_mutex_unlock(&mutex);
-}
 
 struct service_create_args_t* deserialize_service_create_args(char* buffer, ssize_t params_size){
     struct service_create_args_t* args = malloc(sizeof(struct service_create_args_t));
@@ -92,9 +81,10 @@ service_t service_create(
         new_service_id = LAST_INDEX++;
 
     SERVICES[new_service_id].servicename = strdup(servicename);
-//    SERVICES[new_service_id].flags = flags;
+    //    SERVICES[new_service_id].flags = flags;
     SERVICES[new_service_id].argc = argc;
 
+    SERVICES[new_service_id].program_path = strdup(program_path);
 
 
     SERVICES[new_service_id].restart_times = (flags >> 16) & 0xF;
@@ -107,6 +97,8 @@ service_t service_create(
     }
     else if (pid > 0) {
         SERVICES[new_service_id].pid = pid;
+        SERVICES[new_service_id].process_name = strdup(get_process_name_by_pid(pid));
+
         if (flags & SUPERVISOR_FLAGS_CREATESTOPPED) {
             kill(pid, SIGSTOP);
             SERVICES[new_service_id].flags = SUPERVISOR_FLAGS_CREATESTOPPED;
@@ -146,11 +138,13 @@ service_t service_create(
 int service_close(service_t service) {
     SERVICES[service].status = 0;
     free(SERVICES[service].servicename);
+    free(SERVICES[service].process_name);
     SERVICES[service].supervisor = 0;
     SERVICES[service].pid = -1;
     free(SERVICES[service].args);
     SERVICES[service].restart_times = 0;
     SERVICES[service].flags = 0;
+    free(SERVICES[service].program_path);
     return 0;
 }
 
@@ -161,12 +155,24 @@ service_t service_open(const char *servicename) {
             if( kill(SERVICES[i].pid, 0)  != 0 ){
                 SERVICES[i].status = SUPERVISOR_STATUS_STOPPED;
 
-                service_t new_service = service_create(SERVICES[i].servicename, SERVICES[i].args[0], (const char **) SERVICES[i].args,
+                service_t new_service = service_create(SERVICES[i].servicename, SERVICES[i].program_path, (const char **) SERVICES[i].args,
                                SERVICES[i].argc, SERVICES[i].flags | SUPERVISOR_FLAGS_RESTARTTIMES(SERVICES[i].restart_times + 1));
                 service_close(i);
                 printf("Service %s restarted\n", servicename);
                 return new_service;
 
+            }
+            else{
+                char * process_name = get_process_name_by_pid(SERVICES[i].pid);
+                if(strcmp(process_name, SERVICES[i].process_name) != 0){
+                    SERVICES[i].status = SUPERVISOR_STATUS_STOPPED;
+
+                    service_t new_service = service_create(SERVICES[i].servicename, SERVICES[i].program_path, (const char **) SERVICES[i].args,
+                                                           SERVICES[i].argc, SERVICES[i].flags | SUPERVISOR_FLAGS_RESTARTTIMES(SERVICES[i].restart_times + 1));
+                    service_close(i);
+                    printf("Service %s restarted\n", servicename);
+                    return new_service;
+                }
             }
             return i;
         }
@@ -204,7 +210,7 @@ int service_resume(service_t service){
 int service_cancel(service_t service){
     if(SERVICES[service].status) {
         kill(SERVICES[service].pid, SIGKILL);
-        SERVICES[service].status = SUPERVISOR_STATUS_STOPPED;
+        //SERVICES[service].status = SUPERVISOR_STATUS_STOPPED;
         return SERVICES[service].status;
     }
     else{
@@ -279,4 +285,24 @@ int supervisor_freelist(char **service_names, int count) {
     free(service_names);
 
     return 0;
+}
+
+
+const char* get_process_name_by_pid(const int pid)
+{
+    char* name = (char*)calloc(1024,sizeof(char));
+    if(name){
+        sprintf(name, "/proc/%d/cmdline",pid);
+        FILE* f = fopen(name,"r");
+        if(f){
+            size_t size;
+            size = fread(name, sizeof(char), 1024, f);
+            if(size>0){
+                if('\n'==name[size-1])
+                    name[size-1]='\0';
+            }
+            fclose(f);
+        }
+    }
+    return name;
 }
