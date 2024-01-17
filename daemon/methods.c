@@ -136,6 +136,7 @@ service_t service_create(
 
 
 int service_close(service_t service) {
+    pthread_mutex_lock(&mutex);
     SERVICES[service].status = 0;
     free(SERVICES[service].servicename);
     free(SERVICES[service].process_name);
@@ -145,11 +146,13 @@ int service_close(service_t service) {
     SERVICES[service].restart_times = 0;
     SERVICES[service].flags = 0;
     free(SERVICES[service].program_path);
+    pthread_mutex_unlock(&mutex);
     return 0;
 }
 
 
 service_t service_open(const char *servicename) {
+    pthread_mutex_lock(&mutex);
     for(int i=0; i < LAST_INDEX; i++){
         if(strcmp(SERVICES[i].servicename, servicename) == 0){
             if( kill(SERVICES[i].pid, 0)  != 0 ){
@@ -171,61 +174,80 @@ service_t service_open(const char *servicename) {
                                                            SERVICES[i].argc, SERVICES[i].flags | SUPERVISOR_FLAGS_RESTARTTIMES(SERVICES[i].restart_times + 1));
                     service_close(i);
                     printf("Service %s restarted\n", servicename);
+                    pthread_mutex_unlock(&mutex);
                     return new_service;
                 }
             }
+            pthread_mutex_unlock(&mutex);
             return i;
         }
     }
+    pthread_mutex_unlock(&mutex);
     return -1;
 }
 
 int service_status(service_t service){
-    return SERVICES[service].status;
+    pthread_mutex_lock(&mutex);
+    int status = SERVICES[service].status;
+    pthread_mutex_unlock(&mutex);
+    return status;
 }
 
 
 int service_suspend(service_t service){
+    pthread_mutex_lock(&mutex);
     if(SERVICES[service].status) {
         kill(SERVICES[service].pid, SIGSTOP);
         SERVICES[service].status = SUPERVISOR_STATUS_PENDING;
+        pthread_mutex_unlock(&mutex);
         return SERVICES[service].status;
     }
     else{
+        pthread_mutex_unlock(&mutex);
         return -1;
     }
 }
 
 int service_resume(service_t service){
+    pthread_mutex_lock(&mutex);
     if(SERVICES[service].status) {
         kill(SERVICES[service].pid, SIGCONT);
         SERVICES[service].status = SUPERVISOR_STATUS_RUNNING;
+        pthread_mutex_unlock(&mutex);
         return SERVICES[service].status;
     }
     else{
+        pthread_mutex_unlock(&mutex);
         return -1;
     }
 }
 
 int service_cancel(service_t service){
+    pthread_mutex_lock(&mutex);
+
     if(SERVICES[service].status) {
         kill(SERVICES[service].pid, SIGKILL);
         //SERVICES[service].status = SUPERVISOR_STATUS_STOPPED;
+        pthread_mutex_unlock(&mutex);
         return SERVICES[service].status;
     }
     else{
+        pthread_mutex_unlock(&mutex);
         return -1;
     }
 
 }
 
 int service_remove(service_t service){
+    pthread_mutex_lock(&mutex);
     if(SERVICES[service].status) {
+        pthread_mutex_unlock(&mutex);
         service_cancel(service);
         service_close(service);
         return 0;
     }
     else{
+        pthread_mutex_unlock(&mutex);
         return -1;
     }
 }
@@ -240,6 +262,8 @@ int supervisor_list(
 
     *count = 0;
 
+    pthread_mutex_lock(&mutex);
+
     for (int i = 0; i < MAX_SERVICES; i++) {
         if (SERVICES[i].status != 0) {
             (*count)++;
@@ -248,12 +272,14 @@ int supervisor_list(
 
     if (*count == 0) {
         *service_names = NULL;
+        pthread_mutex_unlock(&mutex);
         return 0;
     }
 
     *service_names = (char **)malloc(*count * sizeof(char *));
     if (*service_names == NULL) {
         perror("malloc");
+        pthread_mutex_unlock(&mutex);
         exit(EXIT_FAILURE);
     }
 
@@ -263,26 +289,31 @@ int supervisor_list(
             (*service_names)[index] = strdup(SERVICES[i].servicename);
             if ((*service_names)[index] == NULL) {
                 perror("strdup");
+                pthread_mutex_unlock(&mutex);
                 exit(EXIT_FAILURE);
             }
             index++;
         }
     }
 
+    pthread_mutex_unlock(&mutex);
     return 0;
 }
 
 
 int supervisor_freelist(char **service_names, int count) {
+
     if (service_names == NULL) {
         return -1;
     }
 
+    pthread_mutex_lock(&mutex);
     for (int i = 0; i < count; i++) {
         free(service_names[i]);
     }
 
     free(service_names);
+    pthread_mutex_unlock(&mutex);
 
     return 0;
 }
